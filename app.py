@@ -1,25 +1,53 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_file, g
 import mysql.connector
 import pandas as pd
-from flask import send_file
+import os
+
 app = Flask(__name__)
 
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="",
-    database="test_interface"
-)   
+# Configuration de la base de données avec variables d'environnement
+db_config = {
+    'host': os.environ.get('DB_HOST', 'localhost'),
+    'user': os.environ.get('DB_USER', 'root'),
+    'password': os.environ.get('DB_PASSWORD', ''),
+    'database': os.environ.get('DB_NAME', 'test_interface'),
+    'port': int(os.environ.get('DB_PORT', 3306)),
+    'autocommit': True,
+    'pool_name': 'mypool',
+    'pool_size': 5
+}
 
-cursor = db.cursor(dictionary=True)
+def get_db():
+    """Obtenir une connexion à la base de données"""
+    if 'db' not in g:
+        try:
+            g.db = mysql.connector.connect(**db_config)
+            g.cursor = g.db.cursor(dictionary=True)
+        except mysql.connector.Error as err:
+            print(f"Erreur de connexion: {err}")
+            return None, None
+    return g.db, g.cursor
+
+@app.teardown_appcontext
+def close_db(error):
+    """Fermer la connexion à la fin de chaque requête"""
+    db = g.pop('db', None)
+    cursor = g.pop('cursor', None)
+    if cursor is not None:
+        cursor.close()
+    if db is not None:
+        db.close()
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-
 @app.route("/clients", methods=["GET", "POST"])
 def clients():
+    db, cursor = get_db()
+    if not db or not cursor:
+        return "Erreur de connexion à la base de données", 500
+        
     if request.method == "POST":
         nom = request.form["nom"]
         adresse = request.form["adresse"]
@@ -38,17 +66,22 @@ def clients():
     clients = cursor.fetchall()
     return render_template("clients.html", clients=clients)
 
-
-
 @app.route("/clients/delete/<int:id>")
 def delete_client(id):
+    db, cursor = get_db()
+    if not db or not cursor:
+        return "Erreur de connexion", 500
+        
     cursor.execute("DELETE FROM client WHERE code_client = %s", (id,))
     db.commit()
     return redirect(url_for("clients"))
 
-
 @app.route("/clients/edit/<int:id>", methods=["GET", "POST"])
 def edit_client(id):
+    db, cursor = get_db()
+    if not db or not cursor:
+        return "Erreur de connexion", 500
+        
     if request.method == "POST":
         cursor.execute("""
             UPDATE client
@@ -68,10 +101,12 @@ def edit_client(id):
     client = cursor.fetchone()
     return render_template("edit_client.html", client=client)
 
-
-
 @app.route("/clients/search", methods=["GET"])
 def search_client():
+    db, cursor = get_db()
+    if not db or not cursor:
+        return "Erreur de connexion", 500
+        
     keyword = request.args.get("q", "")
     cursor.execute("""
         SELECT * FROM client
@@ -80,10 +115,12 @@ def search_client():
     clients = cursor.fetchall()
     return render_template("clients.html", clients=clients)
 
-
-
 @app.route("/commandes", methods=["GET", "POST"])
 def commandes():
+    db, cursor = get_db()
+    if not db or not cursor:
+        return "Erreur de connexion à la base de données", 500
+        
     if request.method == "POST":
         cursor.execute("""
             INSERT INTO commande 
@@ -115,10 +152,12 @@ def commandes():
                            commandes=commandes,
                            clients=clients)
 
-
-
 @app.route("/commandes/delete/<int:id>")
 def delete_commande(id):
+    db, cursor = get_db()
+    if not db or not cursor:
+        return "Erreur de connexion", 500
+        
     cursor.execute(
         "DELETE FROM commande WHERE numero_commande = %s",
         (id,)
@@ -126,9 +165,12 @@ def delete_commande(id):
     db.commit()
     return redirect(url_for("commandes"))
 
-
 @app.route("/commandes/edit/<int:id>", methods=["GET", "POST"])
 def edit_commande(id):
+    db, cursor = get_db()
+    if not db or not cursor:
+        return "Erreur de connexion", 500
+        
     if request.method == "POST":
         cursor.execute("""
             UPDATE commande
@@ -164,9 +206,12 @@ def edit_commande(id):
         clients=clients
     )
 
-
 @app.route("/commandes/export")
 def export_commandes():
+    db, cursor = get_db()
+    if not db or not cursor:
+        return "Erreur de connexion", 500
+        
     cursor.execute("""
         SELECT c.numero_commande, c.date_commande, c.montant_commande,
                cl.nom
@@ -176,16 +221,19 @@ def export_commandes():
     data = cursor.fetchall()
 
     df = pd.DataFrame(data)
-    file_path = "commandes.xlsx"
+    
+    # Sauvegarder dans le dossier exports
+    file_path = "exports/commandes.xlsx"
     df.to_excel(file_path, index=False)
 
     return send_file(file_path, as_attachment=True)
 
-
-
-
 @app.route("/facture/<int:id>")
 def facture(id):
+    db, cursor = get_db()
+    if not db or not cursor:
+        return "Erreur de connexion", 500
+        
     cursor.execute("""
         SELECT c.numero_commande, c.date_commande, c.montant_commande,
                c.frais_livraison, cl.nom
@@ -195,5 +243,6 @@ def facture(id):
     """, (id,))
     facture = cursor.fetchone()
     return render_template("facture.html", facture=facture)
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)

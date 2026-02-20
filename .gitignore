@@ -27,3 +27,8 @@ instance/
 *.swo
 *~
 .DS_Store
+# Docker exports
+/exports/
+*.xlsx
+# MySQL data (ne pas commiter)
+mysql_data/
