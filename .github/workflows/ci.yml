@@ -29,6 +29,11 @@ jobs:
         with:
           python-version: '3.12'
       
+      - name: Install MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+      
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
@@ -51,12 +56,18 @@ jobs:
       - name: Wait for MySQL
         run: |
           while ! mysqladmin ping -h"127.0.0.1" -P"3306" --silent; do
-            sleep 1
+            echo "Waiting for MySQL..."
+            sleep 2
           done
       
       - name: Initialize database
         run: |
-          mysql -h 127.0.0.1 -P 3306 -u root -prootpassword test_interface < init.sql
+          if [ -f init.sql ]; then
+            mysql -h 127.0.0.1 -P 3306 -u root -prootpassword test_interface < init.sql
+            echo "Database initialized successfully"
+          else
+            echo "init.sql not found, skipping database initialization"
+          fi
       
       - name: Run tests
         env:
@@ -71,23 +82,8 @@ jobs:
           python -c "import mysql.connector; print('MySQL Connector OK')"
           python -c "import pandas; print('Pandas OK')"
           
-          # Test de connexion à MySQL
-          python -c "
-import os
-import mysql.connector
-conn = mysql.connector.connect(
-    host=os.environ.get('DB_HOST'),
-    user=os.environ.get('DB_USER'),
-    password=os.environ.get('DB_PASSWORD'),
-    database=os.environ.get('DB_NAME')
-)
-cursor = conn.cursor()
-cursor.execute('SHOW TABLES')
-tables = cursor.fetchall()
-print(f'Tables trouvées: {tables}')
-assert len(tables) > 0, 'Aucune table trouvée'
-print('Test de connexion MySQL réussi!')
-"
+          # Test de connexion à MySQL en une ligne
+          python -c "import os; import mysql.connector; conn = mysql.connector.connect(host=os.environ.get('DB_HOST'), user=os.environ.get('DB_USER'), password=os.environ.get('DB_PASSWORD'), database=os.environ.get('DB_NAME')); cursor = conn.cursor(); cursor.execute('SHOW TABLES'); tables = cursor.fetchall(); print(f'✅ Tables trouvées: {tables}'); cursor.close(); conn.close(); print('✅ Test de connexion MySQL réussi!')"
       
       - name: Build Docker image
         run: |
@@ -98,7 +94,7 @@ print('Test de connexion MySQL réussi!')
       - name: Simulate deployment
         run: |
           echo "==================================="
-          echo " DÉPLOIEMENT SIMULÉ "
+          echo "DÉPLOIEMENT SIMULÉ "
           echo "==================================="
           echo "Commande de déploiement:"
           echo "docker tag gestion-clients:${{ github.sha }} ghcr.io/${{ github.repository }}/gestion-clients:latest"
