@@ -10,12 +10,6 @@
 
 Application web développée avec **Flask (Python)** et **MySQL** pour gérer facilement des clients et leurs commandes. Elle permet d'effectuer toutes les opérations CRUD (Créer, Lire, Modifier, Supprimer) sur les clients et les commandes, avec génération de factures et export Excel.
 
-### Objectif
-Ce projet a été réalisé dans le cadre d'un TP DevOps pour mettre en pratique :
-- Git et GitHub
-- Docker et Docker Compose
-- Intégration continue (CI/CD) avec GitHub Actions
-
 ## ✨ Fonctionnalités
 
 ### Gestion des clients
