@@ -67,7 +67,7 @@ L'application est composée de deux parties :
 
 ##  Installation et démarrage
 
-### Méthode 1 : Avec Docker (recommandé - 2 minutes)
+### Méthode 1 : Avec Docker 
 
 ```bash
 # 1. Récupérer le projet
