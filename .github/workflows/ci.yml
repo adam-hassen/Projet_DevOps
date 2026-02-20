@@ -1,5 +1,9 @@
 name: CI/CD Pipeline
 
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   push:
     branches: [ main, master ]
@@ -78,8 +82,8 @@ jobs:
           DB_PORT: 3306
         run: |
           # Test simple - vérifier que l'import Flask fonctionne
-          python -c "import flask; print('Flask OK')"
-          python -c "import mysql.connector; print('MySQL Connector OK')"
+          python -c "import flask; print(' Flask OK')"
+          python -c "import mysql.connector; print(' MySQL Connector OK')"
           python -c "import pandas; print('Pandas OK')"
           
           # Test de connexion à MySQL en une ligne
@@ -89,12 +93,12 @@ jobs:
         run: |
           echo "Construction de l'image Docker..."
           docker build -t gestion-clients:${{ github.sha }} .
-          echo "Image construite avec succès !"
+          echo " Image construite avec succès !"
       
       - name: Simulate deployment
         run: |
           echo "==================================="
-          echo "DÉPLOIEMENT SIMULÉ "
+          echo " DÉPLOIEMENT SIMULÉ "
           echo "==================================="
           echo "Commande de déploiement:"
           echo "docker tag gestion-clients:${{ github.sha }} ghcr.io/${{ github.repository }}/gestion-clients:latest"
@@ -119,6 +123,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Create and push tag
         run: |
