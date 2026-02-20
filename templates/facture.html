@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Facture</h2>
+
+<p><strong>Client :</strong> {{ facture.nom }}</p>
+<p><strong>Commande :</strong> {{ facture.numero_commande }}</p>
+<p><strong>Date :</strong> {{ facture.date_commande }}</p>
+
+<hr>
+
+<p><strong>Montant :</strong> {{ facture.montant_commande }} €</p>
+<p><strong>Frais livraison :</strong> {{ facture.frais_livraison }} €</p>
+
+<h3>Total : {{ facture.montant_commande + facture.frais_livraison }} €</h3>
+
+{% endblock %}

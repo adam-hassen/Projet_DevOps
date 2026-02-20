@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Clients</h2>
+
+<div class="page-grid">
+
+    <!-- TABLE -->
+    <div class="box">
+        <h3>Liste des clients</h3>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Adresse</th>
+                <th>Points</th>
+                <th>Expiration</th>
+                <th>Actions</th>
+            </tr>
+            {% for c in clients %}
+            <tr>
+                <td>{{ c.code_client }}</td>
+                <td>{{ c.nom }}</td>
+                <td>{{ c.adresse_postale }}</td>
+                <td>{{ c.membership_points }}</td>
+                <td>{{ c.expiry_date }}</td>
+                <td class="actions">
+                    <a href="/clients/edit/{{ c.code_client }}" class="btn edit">✏️</a>
+                    <a href="/clients/delete/{{ c.code_client }}"
+                       class="btn delete"
+                       onclick="return confirm('Supprimer ce client ?')">🗑️</a>
+                </td>
+            </tr>
+          
+
+            {% endfor %}
+        </table>
+          <form method="get" action="/clients/search">
+    <input type="text" name="q" placeholder="Rechercher par nom ou ID">
+    <button type="submit">Rechercher</button>
+</form>
+    </div>
+
+    <!-- FORM -->
+    <div class="box">
+        <h3>Ajouter un client</h3>
+        <form method="post">
+            <input type="text" name="nom" placeholder="Nom" required>
+            <input type="text" name="adresse" placeholder="Adresse" required>
+            <input type="number" name="points" placeholder="Points fidélité" value="0" min="0">
+            <input type="date" name="expiry">
+            <button type="submit">Ajouter</button>
+        </form>
+    </div>
+
+</div>
+
+{% endblock %}

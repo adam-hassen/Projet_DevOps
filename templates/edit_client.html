@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Modifier client</h2>
+
+<form method="post" class="form-box">
+    <input type="text" name="nom" value="{{ client.nom }}" required>
+    <input type="text" name="adresse" value="{{ client.adresse_postale }}" required>
+    <input type="number" name="points" value="{{ client.membership_points }}" min="0">
+    <input type="date" name="expiry"
+           value="{{ client.expiry_date if client.expiry_date else '' }}">
+    <button type="submit">Enregistrer</button>
+</form>
+
+{% endblock %}

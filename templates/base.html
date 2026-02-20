@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Projet Concierge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="brand">Projet Concierge</div>
+    <nav>
+        <a href="/">Accueil</a>
+        <a href="/clients">Clients</a>
+        <a href="/commandes">Commandes</a>
+    </nav>
+</header>
+
+<main class="main-container">
+    {% block content %}{% endblock %}
+</main>
+
+</body>
+</html>
